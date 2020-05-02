@@ -59,9 +59,6 @@ def unet(input_size, classes):
     conv10 = Conv2D(3, 1, activation = 'softmax')(conv9)
 
     model = Model(input=inputs, output=conv10)
-    opt = Adam(lr=1E-5, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-    model.compile(opt, loss='categorical_crossentropy', metrics=['accuracy']) # mIOU, dice_coeff
-    model.summary()
 
     return model
 

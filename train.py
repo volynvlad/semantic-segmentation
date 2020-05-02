@@ -5,6 +5,7 @@ import os
 
 import model
 import data
+import dice_loss
 
 path="./cityscapes_data/"
 
@@ -20,6 +21,7 @@ INPUT_SHAPE = (256, 256, 3)
 processor = data.DataProcessor(256, 256)
 
 print("loading data")
+print('-' * 30)
 
 train_X = processor.get_frame_data('train')
 val_X = processor.get_frame_data('val')
@@ -38,13 +40,16 @@ test_y = processor.get_mask_data('test')
 
 
 unet_model = model.unet(INPUT_SHAPE, CLASSES)
+opt = Adam(lr=1e-5, beta_1=0.9, beta_2=1-1e-3, epsilon=1e-08)
+unet_model.compile(opt, loss=dice_loss.dice_coef_loss, metrics=[dice_loss.dice_coef])
+# unet_model.summary()
 print("get unet")
 
-checkpoint = callbacks.ModelCheckpoint(weights_path, monitor='categorical_crossentropy',
+checkpoint = callbacks.ModelCheckpoint(weights_path, monitor=dice_loss.dice_coef_loss,
                              verbose=1, save_best_only=True, mode='min')
 csv_logger = callbacks.CSVLogger('./log.out', append=True, separator=';')
-earlystopping = callbacks.EarlyStopping(monitor = 'categorical_crossentropy', verbose = 1,
-                              min_delta = 0.01, patience = 3, mode = 'min')
+earlystopping = callbacks.EarlyStopping(monitor=dice_loss.dice_coef_loss, verbose=1,
+                              min_delta=0.01, patience=3, mode='min')
 callbacks_list = [checkpoint, csv_logger, earlystopping]
 
 # results = m.fit_generator(train_gen,
@@ -63,8 +68,10 @@ results = unet_model.fit(train_X, train_y,
                 callbacks=callbacks_list)
 
 print(results)
-with open("history.txt") as f:
-    f.write("reseults = " + results)
+print("save history")
+np.save('unet_history.npy', history.history)
+# load
+# history = np.load('unet_history.npy', allow_pickle='TRUE').item()
 print(f"score = {unet_model.score(test_X, test_y)}")
 print("save model")
-m.save('Model.h5')
+unet_model.save('Model.h5')
