@@ -1,6 +1,6 @@
 log.out
 __pycache__
-cityscapes_data/*
+data/
 .idea/
 unet_history.npy
 *.swp
