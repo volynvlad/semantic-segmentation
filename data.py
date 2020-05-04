@@ -1,4 +1,3 @@
-from keras.preprocessing.image import ImageDataGenerator
 import cv2
 
 import numpy as np
@@ -22,6 +21,8 @@ class DataProcessor(object):
 
 
     def reconstruct_folders(self):
+        print("reconstruct folders")
+        print('-' * 30)
         train_size = int(sum(len(os.listdir(self.frame_path + 'train/' + name))
                              for name in os.listdir(self.frame_path + 'train/')) * 17 / 18)
         os.mkdir(self.path + "frames")
@@ -56,7 +57,34 @@ class DataProcessor(object):
                     cv2.resize(frame_image, (self.out_rows, self.out_cols), interpolation=cv2.INTER_NEAREST))
                 count += 1
 
+    def image_to_numpy_data(self, name, rgb_to_id):
+        print(f"image {name} to numpy ...")
+        print('-' * 30)
+        path_masks = self.path + name + "_masks/"
 
+        masks_names = os.listdir(path_masks)
+
+        y = []
+
+        for masks_name in masks_names:
+            image = cv2.imread(path_masks + masks_name)
+            y.append(self.mask_to_class(image, rgb_to_id))
+
+        np.save(f"{path_masks}/{name}_mask.npy", np.array(y))
+
+
+    def get_codes(self):
+        id_to_rgb = {}
+        rgb_to_id = {}
+        codes_path = './id_to_rgb.txt'
+        codes = open(codes_path, 'r')
+        lines = codes.readlines()
+        for line in lines:
+            numbers = [int(x) for x in line.replace('\n', '').split(',')]
+            id_to_rgb[numbers[0]] = tuple(numbers[1:])
+            rgb_to_id[tuple(numbers[1:])] = numbers[0]
+
+        return id_to_rgb, rgb_to_id
 
     def get_frame_data(self, name):
         print(f"load {name} frame data...")
@@ -69,6 +97,8 @@ class DataProcessor(object):
 
         for frame_name in frame_names:
             image = cv2.imread(path_frames + frame_name)
+            image = image.astype(np.float32)
+            image /= 255
             X.append(image)
 
         return np.array(X)
@@ -76,32 +106,24 @@ class DataProcessor(object):
     def get_mask_data(self, name):
         print(f"load {name} mask data...")
         print('-' * 30)
-        path_masks = self.path + name + "_masks/"
+        return np.load(f"{self.path}{name}_masks/{name}_mask.npy")
 
-        masks_names = os.listdir(path_masks)
-
-        y = []
-
-        for masks_name in masks_names:
-            image = cv2.imread(path_masks + masks_name)
-            # TODO convert image to n images, n - number of classes on the images
-            y.append(image)
-#             y.append(self.mask_to_onehot(image, classes, rgbtoid))
-
-        return np.array(y)
-
-    def mask_to_onehot(self, mask, classes, rgbtoid):
-        onehot_mask = np.zeros((mask.shape[0], mask.shape[1], classes))
+    def mask_to_class(self, mask, rgb_to_id):
+        class_mask = np.zeros((mask.shape[0], mask.shape[1],))
 
         for i in range(mask.shape[0]):
             for j in range(mask.shape[1]):
-                onehot_mask[i, j, rdbtoid[mask[i, j]]] = 1
+                class_mask[i, j] = rgb_to_id[tuple(mask[i, j])]
 
-        return onehot_mask
+        return class_mask
 
 
 if __name__ == "__main__":
     processor = DataProcessor(256, 256)
     
     processor.reconstruct_folders()
+    rgb_to_id = processor.get_codes()[1]
+    processor.image_to_numpy_data('train', rgb_to_id)
+    processor.image_to_numpy_data('val', rgb_to_id)
+    processor.image_to_numpy_data('test', rgb_to_id)
 
