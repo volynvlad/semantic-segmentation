@@ -4,3 +4,4 @@ data/
 .idea/
 unet_history.npy
 *.swp
+results/Model*

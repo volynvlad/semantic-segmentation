@@ -1,8 +1,9 @@
+from keras.preprocessing.image import ImageDataGenerator
 import cv2
-
 import numpy as np
 
 import os
+import random
 
 
 class DataProcessor(object):
@@ -57,22 +58,6 @@ class DataProcessor(object):
                     cv2.resize(frame_image, (self.out_rows, self.out_cols), interpolation=cv2.INTER_NEAREST))
                 count += 1
 
-    def image_to_numpy_data(self, name, rgb_to_id):
-        print(f"image {name} to numpy ...")
-        print('-' * 30)
-        path_masks = self.path + name + "_masks/"
-
-        masks_names = os.listdir(path_masks)
-
-        y = []
-
-        for masks_name in masks_names:
-            image = cv2.imread(path_masks + masks_name)
-            y.append(self.mask_to_class(image, rgb_to_id))
-
-        np.save(f"{path_masks}/{name}_mask.npy", np.array(y))
-
-
     def get_codes(self):
         id_to_rgb = {}
         rgb_to_id = {}
@@ -86,44 +71,71 @@ class DataProcessor(object):
 
         return id_to_rgb, rgb_to_id
 
-    def get_frame_data(self, name):
-        print(f"load {name} frame data...")
-        print('-' * 30)
-        path_frames = self.path + name + "_frames/"
-
-        frame_names = os.listdir(path_frames)
-
-        X = []
-
-        for frame_name in frame_names:
-            image = cv2.imread(path_frames + frame_name)
-            image = image.astype(np.float32)
-            image /= 255
-            X.append(image)
-
-        return np.array(X)
-
-    def get_mask_data(self, name):
-        print(f"load {name} mask data...")
-        print('-' * 30)
-        return np.load(f"{self.path}{name}_masks/{name}_mask.npy")
-
     def mask_to_class(self, mask, rgb_to_id):
-        class_mask = np.zeros((mask.shape[0], mask.shape[1],))
+        classes = len(rgb_to_id)
+        class_mask = np.zeros((self.out_rows, self.out_cols, classes))
 
         for i in range(mask.shape[0]):
             for j in range(mask.shape[1]):
-                class_mask[i, j] = rgb_to_id[tuple(mask[i, j])]
+                class_mask[i, j, rgb_to_id[tuple(mask[i, j])]] = 1
 
         return class_mask
 
+    def get_generator(self, name, batch_size, rgb_to_id, shape, classes):
+        print(f"get {name} generator")
+        print('-' * 30)
+
+#         train_datagen = ImageDataGenerator(
+#             rescale = 1./255,
+#             shear_range=0.2,
+#             zoom_range=0.2,
+#             horizontal_flip=True)
+#         val_datagen = ImageDataGenerator(rescale=1./255)
+# 
+#         generator = train_datagen if name == 'train' else val_datagen
+# 
+#         image_generator = generator.flow_from_directory(f"{self.path}{name}_frames",
+#                                                            batch_size=8)
+#         mask_generator = generator.flow_from_directory(f"{self.path}{name}_masks",
+#                                                            batch_size=8)
+#         return zip(image_generator, mask_generator)
+
+        c = 0
+        frames_folder = f"{self.path}{name}_frames"
+        masks_folder = f"{self.path}{name}_masks"
+
+        n = os.listdir(frames_folder)
+        random.shuffle(n)
+
+        while True:
+            frame = np.zeros((batch_size, *shape)).astype('float')
+            mask = np.zeros((batch_size, shape[0], shape[1], classes))
+
+            if c + batch_size >= len(os.listdir(frames_folder)):
+                c = 0
+                random.shuffle(n)
+
+            for i in range(c, c + batch_size):
+                train_frame = cv2.imread(f"{frames_folder}/{n[i]}") / 255.
+                train_frame = cv2.resize(train_frame, (shape[0], shape[1]))
+
+                frame[i - c] = train_frame
+
+                train_mask = cv2.imread(f"{masks_folder}/{n[i].replace('frame', 'mask')}")
+#                 ret_train_mask = np.zeros((shape[0], shape[1], classes))
+
+                for x in range(shape[0]):
+                    for y in range(shape[1]):
+                        mask[i - c, x, y, rgb_to_id[tuple(train_mask[x, y])]] = 1
+
+#                 mask[i - c] = ret_train_mask
+
+            c += batch_size
+
+            yield frame, mask
 
 if __name__ == "__main__":
     processor = DataProcessor(256, 256)
     
-    processor.reconstruct_folders()
-    rgb_to_id = processor.get_codes()[1]
-    processor.image_to_numpy_data('train', rgb_to_id)
-    processor.image_to_numpy_data('val', rgb_to_id)
-    processor.image_to_numpy_data('test', rgb_to_id)
+#     processor.reconstruct_folders()
 
