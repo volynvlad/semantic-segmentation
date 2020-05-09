@@ -1,6 +1,5 @@
-adam
-num batch_size epochs lr dice_test_loss 
-002 8 1 1e-2 0.64 
-003 8 10 0.03 0.62738037109375
+num batch_size epochs lr focal_loss 
 sgd
-004 1 10 0.01 0.7687228918075562
+001 8 10 0.01 0.1070164942741394
+adam
+002 4 10 0.1 0.009210390038788319
