@@ -13,6 +13,7 @@ packageID = 3 for leftImg8bit
 ```
 ```bash
 mkdir data 
+mkdir data/train data/val data/test
 mv gtFine leftImg8bit data
 python data.py
 python train.py

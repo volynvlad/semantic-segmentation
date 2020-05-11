@@ -14,12 +14,12 @@ path="./data/"
 NO_OF_TRAINING_IMAGES = len(os.listdir(path + 'train/train_frames/'))
 NO_OF_VAL_IMAGES = len(os.listdir(path + 'val/val_frames/'))
 
-NO_OF_EPOCHS = 10
+NO_OF_EPOCHS = 8
 BATCH_SIZE = 4
 weights_path = path
 INPUT_SHAPE = (256, 256, 3)
 LR = 1e-1
-num = 2
+num = 4
 
 processor = data.DataProcessor(INPUT_SHAPE[0], INPUT_SHAPE[1], batch_size=BATCH_SIZE)
 
