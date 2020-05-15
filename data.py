@@ -1,10 +1,8 @@
-from keras.preprocessing.image import ImageDataGenerator
 import cv2
 import numpy as np
 
 import os
 import random
-from itertools import chain
 
 
 class DataProcessor(object):
@@ -20,7 +18,6 @@ class DataProcessor(object):
         self.mask_path = mask_path
         self.img_type = img_type
         self.batch_size = batch_size
-
 
     def reconstruct_folders(self):
         print("reconstruct folders")
@@ -62,7 +59,8 @@ class DataProcessor(object):
                             cv2.resize(frame_image, (self.out_rows, self.out_cols), interpolation=cv2.INTER_NEAREST))
                 count += 1
 
-    def get_codes(self):
+    @staticmethod
+    def get_codes():
         id_to_rgb = {}
         rgb_to_id = {}
         codes_path = './id_to_rgb.txt'
@@ -116,8 +114,8 @@ class DataProcessor(object):
 
             yield frame, mask
 
+
 if __name__ == "__main__":
     processor = DataProcessor(256, 256)
 
 #     processor.reconstruct_folders()
-

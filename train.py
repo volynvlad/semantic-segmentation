@@ -1,6 +1,5 @@
 from keras import callbacks
 from keras.optimizers import Adam, SGD
-from keras.preprocessing.image import ImageDataGenerator
 import numpy as np
 
 import os
@@ -9,7 +8,7 @@ import model
 import data
 import losses
 
-path="./data/"
+path = "./data/"
 
 NO_OF_TRAINING_IMAGES = len(os.listdir(path + 'train/train_frames/'))
 NO_OF_VAL_IMAGES = len(os.listdir(path + 'val/val_frames/'))
