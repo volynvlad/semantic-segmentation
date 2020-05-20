@@ -13,7 +13,7 @@ path = "./data/"
 NO_OF_TRAINING_IMAGES = len(os.listdir(path + 'train/train_frames/'))
 NO_OF_VAL_IMAGES = len(os.listdir(path + 'val/val_frames/'))
 
-NO_OF_EPOCHS = 8
+NO_OF_EPOCHS = 20
 BATCH_SIZE = 4
 weights_path = path
 INPUT_SHAPE = (256, 256, 3)

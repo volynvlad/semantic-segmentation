@@ -24,6 +24,7 @@ class DataProcessor(object):
         print('-' * 30)
         train_size = int(sum(len(os.listdir(self.frame_path + 'train/' + name))
                              for name in os.listdir(self.frame_path + 'train/')) * 17 / 18)
+
         os.mkdir(self.path + "train")
         os.mkdir(self.path + "val")
         os.mkdir(self.path + "test")
@@ -43,9 +44,9 @@ class DataProcessor(object):
                     frame_image = cv2.imread(self.frame_path + name + '/' + city_name + '/' + image_name)
                     mask_image = cv2.imread(self.mask_path + name + '/' + city_name + '/' + image_name.replace('leftImg8bit', 'gtFine_color'))
                     is_test = count >= train_size
-                    cv2.imwrite(self.path + f'{"test" if is_test else name}_frames/frame_{count - train_size if is_test else count:04}.{self.img_type}',
+                    cv2.imwrite(self.path + f'{"test" if is_test else name}/{"test" if is_test else name}_frames/frame_{count - train_size if is_test else count:04}.{self.img_type}',
                                 cv2.resize(frame_image, (self.out_rows, self.out_cols), interpolation=cv2.INTER_NEAREST))
-                    cv2.imwrite(self.path + f'{"test" if is_test else name}_masks/mask_{count - train_size if is_test else count:04}.{self.img_type}',
+                    cv2.imwrite(self.path + f'{"test" if is_test else name}/{"test" if is_test else name}_masks/mask_{count - train_size if is_test else count:04}.{self.img_type}',
                                 cv2.resize(mask_image, (self.out_rows, self.out_cols), interpolation=cv2.INTER_NEAREST))
                     count += 1
 
@@ -55,7 +56,7 @@ class DataProcessor(object):
             image_names = os.listdir(self.frame_path + 'test/' + city_name)
             for image_name in image_names:
                 frame_image = cv2.imread(self.frame_path + 'test/' + city_name + '/' + image_name)
-                cv2.imwrite(self.path + f'frames/frame_{count:04}.{self.img_type}',
+                cv2.imwrite(self.path + 'test/' + f'frames/frame_{count:04}.{self.img_type}',
                             cv2.resize(frame_image, (self.out_rows, self.out_cols), interpolation=cv2.INTER_NEAREST))
                 count += 1
 
@@ -117,5 +118,4 @@ class DataProcessor(object):
 
 if __name__ == "__main__":
     processor = DataProcessor(256, 256)
-
-#     processor.reconstruct_folders()
+    processor.reconstruct_folders()
